@@ -67,18 +67,22 @@ userSchema.methods.isPasswordCorrect = async function(){
     return await bcrypt.compare(password, this.password)
 }
 
-//generating access tokens:
+// //generating access tokens:
+// Purpose:
+// Short-lived token used to authenticate API requests.
+// Contains user information (usually in the form of a payload) that the server can verify.
+// Helps ensure that only authenticated users can access specific resources or endpoints.
 userSchema.methods.generateAccessTokens = function(){
     jwt.sign(
-        {
+        {//payload
             _id: this.id,
             username: this.username,
             fullname: this.fullname,
             email: this.email
         },
-        process.env.ACCESS_TOKEN_SECRET,
+        process.env.ACCESS_TOKEN_SECRET, // secret key
         {
-            expiresIn: process.env.ACCESS_TOKEN_EXPIRY
+            expiresIn: process.env.ACCESS_TOKEN_EXPIRY //expiry
         }
     )
 }
