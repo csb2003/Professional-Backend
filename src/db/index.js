@@ -16,6 +16,6 @@ import { asyncHandler  } from "../utils/asyncHandler.js";
 // using middleware style setup to make code cleaner-
 export const connectDB = asyncHandler( async (req,res,next)=>{
     const connectionInstance = await mongoose.connect(`${process.env.MONGODB_URI}/${DB_NAME}`)
-    console.log(`\n Mongodb connected !! DB HOST: ${connectionInstance.connection.host}`)
+    console.log(`💖 Mongodb connected !! DB HOST: ${connectionInstance.connection.host}`)
 })
 

@@ -8,12 +8,11 @@
 
 // 1)  async handler for Promises method : 
 // const asyncHandler = (requestHandler) => {
-
-//     Promise.resolve(requestHandler(req,res, next))
-//     .reject((err)=>{
-//         next(err)
-//     })
-
+//     return (req,res,next) =>{
+//         Promise.resolve(requestHandler(req,res, next))
+//         .reject((err)=>{next(err)})
+//     }
+    
 // }
 
 
