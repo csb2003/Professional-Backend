@@ -6,7 +6,7 @@ import fs from "fs"
 // Configuration
 cloudinary.config({ 
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
-    api_key: process.send.CLOUDINARY_API_SECRET, 
+    api_key: process.env.CLOUDINARY_API_SECRET, 
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
     
@@ -24,7 +24,7 @@ const uploadOnCloudinary = async (localfilePath) => {
     } catch (error) {
         //file is present on local server, but not uploaded on cloudinary
         //thus, for safety, remove it from local server
-        fs.unlink(localfilePath)
+        fs.unlinkSync(localfilePath)
         return null
     }
 }

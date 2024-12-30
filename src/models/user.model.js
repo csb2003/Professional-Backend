@@ -9,14 +9,14 @@ const userSchema = new mongoose.Schema(
       required: true,
       default: 'user',
       unique: true,
-      lowecase: true,
+      lowercase: true,
       trim: true,//useful in searching in database (IMP)
     },
     email: {
       type: String,
       required: [true, 'Email is required'],
       unique: true,
-      lowecase: true,
+      lowercase: true,
       trim: true,
     },
     fullname: {
@@ -44,7 +44,7 @@ const userSchema = new mongoose.Schema(
         ref: 'Video',
       },
     ],
-    refreshTOkens: {
+    refreshTokens: {
       type: String,
     },
   },
