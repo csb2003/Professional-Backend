@@ -17,42 +17,49 @@ const registerUser = asyncHandler ( async (req, res) => {
     const {fullname, email,password,username} = req.body
     console.log(fullname, email,password,username)
 
-
     // 2. Validate required fields
     if (
-        [fullname,email,password,username].some((field)=>
-            field?.trim() === ""
-        )
+        [fullname,email,password,username].some( (field)=>field?.trim() === "" )
     ){
         throw new ApiError(400, "All fields are required")  
     }
 
-
     // 3. Check if user already exists
-    const existedUser =await User.findOne({
+    const existedUser = await User.findOne({
         $or:[{ username }, { email }]
     })
     if (existedUser){
         throw new ApiError(400, "User already exists")
+        
     }
 
     //4.  check for images,avatar
     const avatarLocalPath = req.files?.avatar[0]?.path
-    const coverImageLocalPath = req.files?.coverImage[0]?.path
+    // const coverImageLocalPath = req.files?.coverImage[0]?.path
 
+    let coverImageLocalPath
+    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length>0) {
+        coverImageLocalPath = req.files.coverImage[0].path
+    }
+    
     if (!avatarLocalPath){
         throw new ApiError(400,"Avatar is required")
     }
 
+    
     //5. upload on cloudinary
-    const avatar = await uploadOnCloudinary(avatarLocalPath)
-    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+    const avatar = await uploadOnCloudinary(avatarLocalPath);
+    
+    if (!avatar) {
+        throw new ApiError(400, "Failed to upload avatar to Cloudinary");
+    }
+    
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+    // if (!coverImage) {
+    //     throw new ApiError(400, "Failed to upload cover image to Cloudinary");
+    // }
     
 
-    if (!avatar){
-        throw new ApiError(400,"Avatar is required")
-    }
-    console.log("uploaded to cloudinary")
 
     //6. create an object of all the user data for sending it to mongodb
     const user = await User.create({

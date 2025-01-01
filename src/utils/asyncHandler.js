@@ -29,14 +29,15 @@ const asyncHandler = (func) =>async (req,res,next)=>{
     try {
         await func(req,res,next) 
     } catch (error) {
-        res.status(error.code || 500).json({
+        let statusCode = error.statusCode || error.code || 500;
+        if (typeof statusCode !== 'number' || statusCode < 100 || statusCode > 599) {
+            statusCode = 500; // Default to Internal Server Error
+        }
+        res.status(statusCode).json({
             success: false,
             message: error.message
         })
     }
 }
-
-
-
 
 export { asyncHandler }

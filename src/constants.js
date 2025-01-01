@@ -1,1 +1,1 @@
-export const DB_NAME= "backend database"
+export const DB_NAME= "backend-yt" //name should be same as in mongodb 
