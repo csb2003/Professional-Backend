@@ -63,7 +63,7 @@ userSchema.pre("save", async function(next){
 })
 
 //password comparision-
-userSchema.methods.isPasswordCorrect = async function(){
+userSchema.methods.isPasswordCorrect = async function(password){
     return await bcrypt.compare(password, this.password)
 }
 
@@ -73,32 +73,32 @@ userSchema.methods.isPasswordCorrect = async function(){
 // Contains user information (usually in the form of a payload) that the server can verify.
 // Helps ensure that only authenticated users can access specific resources or endpoints.
 userSchema.methods.generateAccessTokens = function(){
-    jwt.sign(
-        {//payload
-            _id: this.id,
-            username: this.username,
-            fullname: this.fullname,
-            email: this.email
-        },
-        process.env.ACCESS_TOKEN_SECRET, // secret key
-        {
-            expiresIn: process.env.ACCESS_TOKEN_EXPIRY //expiry
-        }
-    )
+  return jwt.sign(
+    {//payload
+      _id: this.id,
+      username: this.username,
+      fullname: this.fullname,
+      email: this.email
+    },
+    process.env.ACCESS_TOKEN_SECRET, // secret key
+    {
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRY //expiry
+    }
+  )
 }
 
 //generating refresh tokens:
 
 userSchema.methods.generateRefreshTokens = function(){
-    jwt.sign(
-        {
-            _id : this.id
-        },
-        process.env.REFRESH_TOKEN_SECRET,
-        {
-            expiresIn: process.env.REFRESH_TOKEN_EXPIRY
-        }
-    )
+  return jwt.sign(
+    {
+      _id : this.id
+    },
+    process.env.REFRESH_TOKEN_SECRET,
+    {
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRY
+    }
+  )
 }
 
 export const User = mongoose.model('User', userSchema);
