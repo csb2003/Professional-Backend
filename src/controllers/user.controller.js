@@ -206,15 +206,11 @@ const refreshAccessToken = async (req,res) => {
         .status(200)
         .cookie("accessToken", accessToken,options)
         .cookie("refreshToken", newrefreshToken,options)
-        .json(
-            new apiResponse
-            (
-                200,
-                {
-                    accessToken, refreshToken : newrefreshToken
-                },
-                "Access token refreshed successfully"
-            )
+        .json(new ApiResponse(
+            200,
+            {accessToken, refreshToken : newrefreshToken},
+            "Access token refreshed successfully"
+        )
         )
     } catch (error) {
         throw new ApiError(401, "Invalid refresh token")
@@ -252,8 +248,8 @@ const changeCurrentPassword = asyncHandler( async (req,res) => {
 
 const getCurrentUser =  asyncHandler( async (req,res) => {
     return res
-    .status(200),
-    .json(200,req.user, "Current user fetched successfully")
+    .status(200)
+    .json(new ApiResponse(200,req.user, "Current user fetched successfully"))
 })
 
 const updateUserDetails = asyncHandler(async (req,res) => {
@@ -262,12 +258,12 @@ const updateUserDetails = asyncHandler(async (req,res) => {
         throw new ApiError(400, "Enter all details to update")
     }
     
-    const user = User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set:{
                 fullname: fullname,
-                emial: email,
+                email: email,
                 username : username
             },
         },
@@ -276,7 +272,7 @@ const updateUserDetails = asyncHandler(async (req,res) => {
         }
     ).select("-password")
 
-    return response
+    return res
     .status(200)
     .json(new ApiResponse(200,user, "User details updates successfully"))
 })
@@ -292,7 +288,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Error while uploading updated avatar on cloudinary")
     }
 
-    await User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set:{
@@ -318,7 +314,7 @@ const updateUsercoverImage = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Error while uploading updated cover Image on cloudinary")
     }
 
-    await User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set:{
@@ -330,7 +326,85 @@ const updateUsercoverImage = asyncHandler(async (req, res) => {
 
     return res
     .status(200)
-    .json(new apiResponse(200, user ,"cover Image updated successfully" ))
+    .json(new ApiResponse(200, user ,"cover Image updated successfully" ))
 })
 
-export { registerUser,loginUser,logoutUser,refreshAccessToken,changeCurrentPassword,updateUserDetails,updateUserAvatar, updateUsercoverImage }
+const getUserChannelProfile = asyncHandler( async (req,res) => {
+    const { username } = req.params
+    if (!username?.trim()) {
+        throw new ApiError(400,"Username is missing")
+    }
+     
+    const channel = await User.aggregate([
+        //1st pipeline - to get the user document from username (from user model)
+        {
+            $match:{
+                username : username?.toLowerCase()
+            } 
+        },
+        //2nd pipeline - to get the subscribers of a channel (user model --> subscription model)
+        {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "channel",
+                as: "subscribers"
+            }
+        },
+        //3rd pipeline- to get the channel to which user has subscribed
+        {
+            $lookup:{
+                from : "subscriptions",
+                localField: "_id",
+                foreignField: "subscriber",
+                as: "subscribedTo"
+            }
+        },
+        //4th pipeline- number of subscribers and channels subscribed
+        {
+            $addFields:{    //additional fields (which will be added in users model)
+                // count of my subscribers
+                subscibersCount:{
+                    $size: "$subscribers"
+                },
+                //count of whom i have subscribed
+                channelSubscribedTo:{
+                    $size: "$subscibedTo"
+                },
+                // value to the subscribed button
+                isSubscirbed: {
+                    if: {$in: [req.user?._id, "$subscribers.subscriber"]},
+                    then: true,
+                    else: false
+                }
+            }
+        },
+        //5th pipeline- what all fields to show-
+        {
+            $project:{
+                fullName: 1,
+                username: 1,
+                subscibersCount: 1,
+                channelSubscribedTo: 1,
+                isSubscirbed: 1,
+                avatar: 1,
+                coverImage: 1,
+                email: 1,
+            }
+        }
+    ])
+    console.log(channel)
+
+    if (!channel?.length) {
+        throw new ApiError(400, "Channel not found")
+    }
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, channel[0], "User channel fetched successfully")
+    )
+    
+})
+
+export { registerUser,loginUser,logoutUser,refreshAccessToken,changeCurrentPassword,updateUserDetails,updateUserAvatar, updateUsercoverImage, getUserChannelProfile }
