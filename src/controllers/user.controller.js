@@ -2,7 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/apiErrors.js"
 import { User } from "../models/user.model.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
-import {ApiResponse} from "../utils/apiResponse.js"
+import { ApiResponse } from "../utils/apiResponse.js"
 import jwt from "jsonwebtoken"
 import mongoose, { Mongoose } from "mongoose";
 
@@ -151,8 +151,8 @@ const logoutUser = asyncHandler( async (req,res) => {
     await User.findByIdAndUpdate(
         req.user._id,
         {
-            $set:{
-                refreshToken: undefined
+            $unset:{
+                refreshToken: 1
             }
         },
         {
@@ -247,15 +247,20 @@ const changeCurrentPassword = asyncHandler( async (req,res) => {
 })
 
 const getCurrentUser =  asyncHandler( async (req,res) => {
+    console.log('Req.user:', req.user);
+  
+    if (!req.user) {
+        throw new ApiError(401, 'Unauthorized request');
+    }
     return res
     .status(200)
     .json(new ApiResponse(200,req.user, "Current user fetched successfully"))
 })
 
 const updateUserDetails = asyncHandler(async (req,res) => {
-    const { fullname, email,username } = req.body
-    if (!(fullname || email || username)) {
-        throw new ApiError(400, "Enter all details to update")
+    const { fullname, email } = req.body
+    if (!fullname || !email) {
+        throw new ApiError(400, "All fields are required")
     }
     
     const user = await User.findByIdAndUpdate(
@@ -264,7 +269,6 @@ const updateUserDetails = asyncHandler(async (req,res) => {
             $set:{
                 fullname: fullname,
                 email: email,
-                username : username
             },
         },
         {
@@ -300,7 +304,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 
     return res
     .status(200)
-    .json(new apiResponse(200, user ,"Avatar updated successfully" ))
+    .json(new ApiResponse(200, user ,"Avatar updated successfully" ))
 })
 
 const updateUsercoverImage = asyncHandler(async (req, res) => {
@@ -454,4 +458,4 @@ const getWatchHistory = asyncHandler( async (req,res) => {
     .json(new ApiResponse(200,user[0].WatchHistory, "watch history fetched successfully"))
 })
 
-export { registerUser,loginUser,logoutUser,refreshAccessToken,changeCurrentPassword,updateUserDetails,updateUserAvatar, updateUsercoverImage, getUserChannelProfile,getWatchHistory }
+export { registerUser,loginUser,logoutUser,refreshAccessToken,changeCurrentPassword,updateUserDetails,updateUserAvatar, updateUsercoverImage, getUserChannelProfile,getWatchHistory, getCurrentUser}
