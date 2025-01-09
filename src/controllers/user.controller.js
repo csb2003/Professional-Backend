@@ -51,6 +51,9 @@ const registerUser = asyncHandler ( async (req, res) => {
         
     }
 
+    if (!req.files || !req.files.avatar) {
+        throw new ApiError(400, "Avatar file is required")
+    }
     //4.  check for images,avatar
     const avatarLocalPath = req.files?.avatar[0]?.path
     // const coverImageLocalPath = req.files?.coverImage[0]?.path
@@ -68,7 +71,7 @@ const registerUser = asyncHandler ( async (req, res) => {
     //5. upload on cloudinary
     const avatar = await uploadOnCloudinary(avatarLocalPath);
     
-    if (!avatar) {
+    if (!avatar || !avatar.url || !avatar.public_id) {
         throw new ApiError(400, "Failed to upload avatar to Cloudinary");
     }
     
@@ -86,7 +89,9 @@ const registerUser = asyncHandler ( async (req, res) => {
         password,
         username,
         avatar: avatar.url,
-        coverImage: coverImage?.url || ""
+        avatarPublicId: avatar.public_id,
+        coverImage: coverImage?.url || "",
+        coverImagePublicId: coverImage?.public_id || ""
     })
 
     //7. in response mongo returns the same object containing all details, thus remove password and refresh tokens
@@ -95,7 +100,7 @@ const registerUser = asyncHandler ( async (req, res) => {
     if (!createdUser) {
         throw new ApiError(400,"Something went wrong while registering user")
     }
-
+    // console.log(createdUser)
     //give final response
     return res.status(201).json(
         new ApiResponse(201,createdUser,"User registered successfully!")

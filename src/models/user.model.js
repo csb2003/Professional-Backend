@@ -35,8 +35,15 @@ const userSchema = new mongoose.Schema(
       type: String, // link will be stored (of Cloudinary)
       required: [true, 'Avatar is required'],
     },
+    avatarPublicId: {
+      type: String, //public id of cloudinary will be stored
+      required: true
+    },
     coverImage: {
       type: String, // link will be stored (of Cloudinary)
+    },
+    coverImagePublicId: {
+      type: String,   //public id of cloudinary will be stored
     },
     watchHistory: [
       {

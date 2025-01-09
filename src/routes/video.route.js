@@ -1,15 +1,34 @@
-// import {upload}  from "../middlewares/multer.middleware.js"
-// import { uploadVideo } from "../controllers/video.controller.js"
+import {upload}  from "../middlewares/multer.middleware.js"
+import { Router } from "express"
 
-// const router = router()
+import {
+    deleteVideo,
+    getAllVideos,
+    getVideoById,
+    publishAvideo,
+    togglePublishStatus,
+    updateVideo,
+} from "../controllers/video.controller.js"
+import {verifyJWT} from "../middlewares/auth.middleware.js"
 
-// router.route('/uploadVideo').post(
-//     //multer middleware
-//     upload.fields([
-//         {
-//             name: 'video',
-//             maxCount : 1
-//         }
-//     ]),
-//     uploadVideo
-// )
+
+const router = Router()
+router.use(verifyJWT); // Apply verifyJWT middleware to all routes in this file
+
+router
+    .route('/')
+    .get(getAllVideos)
+    .post(
+        upload.fields([
+            {
+                name: "videoFile",
+                maxCount: 1
+            },
+            {
+                name: "thumbnail",
+                maxCount: 1
+            }
+        ], publishAvideo)
+    )
+
+export default router
