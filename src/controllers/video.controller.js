@@ -58,11 +58,13 @@ const getAllVideos = asyncHandler( async (req,res) => {
 
 })
 
+
+// Tested ✅
 const publishAvideo = asyncHandler( async (req,res) => {
     // TODO: get video, upload to cloudinary, create video
     const {title, description} = req.body
-    if(!title || !description){
-        throw new ApiError(400, "Title and description are needed")
+    if(!title){
+        throw new ApiError(400, "Title is needed")
     }
 
     const videoLocalPath = req.files?.videoFile[0].path
@@ -80,9 +82,9 @@ const publishAvideo = asyncHandler( async (req,res) => {
     }
 
     const video = await Video.create({
-        videoFile,
+        videoFile: videoFile.url,
         videoFilePublicId: videoFile.public_id,
-        thumbnail,
+        thumbnail:thumbnailFile.url,
         thumbnailPublicId: thumbnailFile.public_id,
         title,
         description,
@@ -98,6 +100,7 @@ const publishAvideo = asyncHandler( async (req,res) => {
 
 })
 
+// Tested ✅
 const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params
     //TODO: get video by id
@@ -111,6 +114,7 @@ const getVideoById = asyncHandler(async (req, res) => {
     )
 })
 
+// Tested ✅
 const updateVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params
     //TODO: update video details like title, description, thumbnail
@@ -120,6 +124,7 @@ const updateVideo = asyncHandler(async (req, res) => {
 
     const {title, description} = req.body
     const newthumbnailLocalPath = req.file?.path
+    console.log(title,description,newthumbnailLocalPath)
 
     if (!newthumbnailLocalPath){
         throw new ApiError(400, "New thumbnail not found")
@@ -151,7 +156,7 @@ const updateVideo = asyncHandler(async (req, res) => {
             $set:{
                 title,
                 description,
-                thumbnail: newthumbnail,
+                thumbnail: newthumbnail.url,
                 thumbnailPublicId: newthumbnail.public_id
             }
         },
@@ -165,10 +170,15 @@ const updateVideo = asyncHandler(async (req, res) => {
     )
 })
 
+// Tested ✅
 const deleteVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params
+    if (!isValidObjectId(videoId)) {
+        throw new ApiError(400, "Invalid Video ID");
+    
+    }
     //TODO: delete video
-    const deleteResponse = Video.findByIdAndDelete(videoId)
+    const deleteResponse = await Video.findByIdAndDelete(videoId)
     if (!deleteResponse) {
         // Log the error but don't throw it since we already have the new thumbnail
         throw new ApiError(400, "couldnt delete video")
@@ -179,8 +189,35 @@ const deleteVideo = asyncHandler(async (req, res) => {
 
 })
 
+// Tested ✅
 const togglePublishStatus = asyncHandler(async (req, res) => {
     const { videoId } = req.params
+    if (!isValidObjectId(videoId)) {
+        throw new ApiError(400, "Invalid Video ID");
+    
+    }
+    const video = await Video.findById(videoId)
+    if (!video) {
+        throw new ApiError(400, "video not found");
+    
+    }
+
+    const publishStatus = video.isPublished
+    const updatedPublishStatus = await Video.findByIdAndUpdate(
+        videoId,
+        {
+            $set:{
+                isPublished: !publishStatus
+            }
+        },
+        {
+            new: true
+        }
+    )
+
+    return res
+    .status(200)
+    .json(200, new ApiResponse(200, updatedPublishStatus.isPublished, `Publish Status: ${updatedPublishStatus.isPublished}`))
 })
 
 export {

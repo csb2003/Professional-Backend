@@ -23,6 +23,7 @@ const uploadOnCloudinary = async (localfilePath) => {
         console.log("file uploaded successfully on cloudinary",response.url,response.public_id)
         return {
             url: response.url,
+            duration: response.duration || null,
             public_id: response.public_id
         }
     } catch (error) {
@@ -34,10 +35,10 @@ const uploadOnCloudinary = async (localfilePath) => {
 }
 
 const deleteFromCloudinary = async(public_id)=>{
-    if (!localfilePath) return null
+    if (!public_id) return null
 
     try {
-        const response = await cloudinary.delete_resources(public_id)
+        const response = await cloudinary.uploader.destroy(public_id)
         console.log("File deleted successfully from cloudinary", response)
         return response
     } catch (error) {

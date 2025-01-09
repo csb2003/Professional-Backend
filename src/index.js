@@ -14,9 +14,9 @@ connectDB()
     console.error("DB connection failed!", err)
 })
 
-app.get('/', (req,res)=>{
-    res.send("hello welcome")
-})
+// app.get('/', (req,res)=>{
+//     res.send("hello welcome")
+// })
 
 //Database Connection:
 //use iife-
